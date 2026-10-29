@@ -2,17 +2,17 @@
 
 ## Overview
 
-This project implements binary logistic regression to classify breast-mass samples as malignant or benign using two features from the Wisconsin Diagnostic Breast Cancer dataset.
+This project uses logistic regression to classify breast-mass samples as malignant or benign using `mean radius` and `mean texture` from the Wisconsin Diagnostic Breast Cancer dataset.
 
-The project compares:
+It compares:
 
-- A logistic regression model implemented manually with NumPy
-- An unregularized scikit-learn `LogisticRegression` model
-- A majority-class baseline using `DummyClassifier`
+- A NumPy logistic regression implementation
+- Scikit-learn `LogisticRegression`
+- A majority-class baseline
 
-The analysis also evaluates how changing the classification threshold affects false positives, false negatives, precision, recall, and F1 score.
+The project also examines how classification thresholds affect precision, recall, F1 score, false positives, and false negatives.
 
-This project is for educational use only and is not intended for clinical diagnosis or medical decision-making.
+**Educational use only. This project is not intended for clinical diagnosis or medical decision-making.**
 
 ---
 
@@ -32,36 +32,34 @@ from sklearn.datasets import load_breast_cancer
 
 No external dataset download is required.
 
-Only these two predictors are used:
+Two predictors are used:
 
 1. `mean radius`
 2. `mean texture`
 
-The original scikit-learn labels are recoded so that:
+The target is recoded as:
 
 - `1 = malignant`
 - `0 = benign`
 
-The dataset contains 569 observations:
+The dataset contains:
 
-- 357 benign
-- 212 malignant
-
-The selected features contain no missing values.
+- 569 observations
+- 357 benign samples
+- 212 malignant samples
+- No missing values in the selected features
 
 ---
 
 ## Methods
 
-The project follows a leakage-free train/validation/test workflow.
-
-The data is split using stratified row indices and `random_state=42`:
+The data is divided using stratified row indices and `random_state=42`:
 
 - Training: 341 observations
 - Validation: 114 observations
 - Test: 114 observations
 
-`StandardScaler` is fitted only on the training features. The fitted scaler is then used to transform the validation and test features.
+`StandardScaler` is fitted only on the training set and then used to transform the validation and test sets.
 
 The NumPy logistic regression model uses:
 
@@ -73,28 +71,13 @@ The NumPy logistic regression model uses:
 - No regularization
 - No class weights
 
-The NumPy implementation is compared with:
-
-```python
-LogisticRegression(
-    C=np.inf,
-    solver="lbfgs",
-    max_iter=10000,
-    tol=1e-9
-)
-```
-
-A majority baseline is created with:
-
-```python
-DummyClassifier(strategy="prior")
-```
+The NumPy model is compared with an unregularized scikit-learn logistic regression model and a `DummyClassifier(strategy="prior")` baseline.
 
 ---
 
 ## Main Findings
 
-The NumPy model reduced training binary cross-entropy loss from:
+The NumPy training loss decreased from:
 
 ```text
 0.693147
@@ -106,7 +89,7 @@ to:
 0.246834
 ```
 
-The learned standardized-unit coefficients were:
+The NumPy and scikit-learn models learned nearly identical coefficients:
 
 | Parameter | NumPy | Scikit-learn |
 |---|---:|---:|
@@ -114,43 +97,26 @@ The learned standardized-unit coefficients were:
 | Mean radius | 3.656794 | 3.656794 |
 | Mean texture | 1.009872 | 1.009872 |
 
-The mean absolute difference between NumPy and scikit-learn validation probabilities was approximately:
+The mean absolute difference between their validation probabilities was approximately:
 
 ```text
 0.0000000001
 ```
 
-This shows that the NumPy implementation closely reproduced the scikit-learn reference model.
+The validation-selected threshold was `0.60`, with an F1 score of `0.831169`.
 
-The best validation F1 score occurred at a classification threshold of:
+On the test set:
 
-```text
-0.60
-```
+| Metric | Threshold 0.50 | Threshold 0.60 |
+|---|---:|---:|
+| Accuracy | 0.868421 | 0.850877 |
+| Precision | 0.885714 | 0.903226 |
+| Recall | 0.738095 | 0.666667 |
+| F1 | 0.805195 | 0.767123 |
 
-Validation F1 at threshold 0.60:
+The selected threshold improved precision but reduced recall and test F1.
 
-```text
-0.831169
-```
-
-However, on the test set, the selected threshold did not outperform the default threshold of 0.50.
-
-At threshold 0.50:
-
-- Accuracy: `0.868421`
-- Precision: `0.885714`
-- Recall: `0.738095`
-- F1: `0.805195`
-
-At threshold 0.60:
-
-- Accuracy: `0.850877`
-- Precision: `0.903226`
-- Recall: `0.666667`
-- F1: `0.767123`
-
-The majority baseline achieved test accuracy of `0.631579` but recall and F1 of `0`, because it did not identify any malignant samples.
+The majority baseline achieved test accuracy of `0.631579` but recall and F1 of `0`, because it identified no malignant samples.
 
 ---
 
@@ -171,73 +137,73 @@ breast-mass-risk-classification/
 └── .gitignore
 ```
 
-### Files
+### Main Files
 
-`logistic_regression_analysis.py`
-
-Runs the complete analysis, including:
-
-- Dataset loading
-- Target recoding
-- Train/validation/test splitting
-- Standardization
-- NumPy logistic regression
-- scikit-learn comparison
-- Baseline model
-- Threshold selection
-- Validation and test evaluation
-- Output generation
-
-`memo.md`
-
-Contains the written project report, calculations, model interpretation, results, limitations, and research-process discussion.
-
-`reports/threshold_results.csv`
-
-Contains validation results for the required thresholds:
-
-```text
-0.20
-0.30
-0.40
-0.50
-0.60
-0.70
-0.80
-```
-
-`reports/assignment_results.csv`
-
-Contains the final validation and test metrics for the baseline, NumPy, and scikit-learn models.
-
-`reports/training_loss.png`
-
-Shows NumPy training binary cross-entropy loss versus epoch.
+- `logistic_regression_analysis.py` — runs the complete analysis
+- `memo.md` — written report and interpretation
+- `reports/threshold_results.csv` — validation results for seven thresholds
+- `reports/assignment_results.csv` — final validation and test results
+- `reports/training_loss.png` — NumPy training-loss curve
+- `requirements.txt` — required Python packages
 
 ---
 
 # Reproducing the Project
 
+## Prerequisites
+
+Before running the project, make sure you have:
+
+- Python 3.10 or newer
+- Git
+- Internet access for installing dependencies
+
+Verify installation:
+
+```text
+python --version
+git --version
+```
+
+On macOS, use:
+
+```text
+python3 --version
+```
+
+Python: https://www.python.org/downloads/
+
+Git: https://git-scm.com/downloads
+
+No separate dataset download is required.
+
+### Opening a Terminal
+
+**Windows:** Open the Start menu, search for **PowerShell**, and open it.
+
+**macOS:** Open **Applications → Utilities → Terminal**.
+
+---
 
 ## Clone the Repository
 
-Replace the URL below with the actual GitHub repository URL if necessary:
+Run:
 
 ```text
 git clone https://github.com/hngo13-cell/breast-mass-risk-classification
 ```
 
-Navigate into the project:
+Then navigate into the project:
 
 ```text
 cd breast-mass-risk-classification
 ```
 
-All commands below should be run from the project root directory.
+Run all remaining commands from this project folder.
 
 ---
 
-# Windows PowerShell Instructions
+# Windows PowerShell
 
 ## 1. Create a virtual environment
 
@@ -251,7 +217,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-If PowerShell blocks activation, run:
+If PowerShell blocks activation:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
@@ -263,9 +229,7 @@ Then activate again:
 .\.venv\Scripts\Activate.ps1
 ```
 
-This changes the policy only for the current PowerShell session.
-
-A successful activation should show:
+Successful activation should show:
 
 ```text
 (.venv)
@@ -287,7 +251,7 @@ python .\logistic_regression_analysis.py
 
 ---
 
-# macOS Terminal Instructions
+# macOS Terminal
 
 ## 1. Create a virtual environment
 
@@ -300,14 +264,6 @@ python3 -m venv .venv
 ```bash
 source .venv/bin/activate
 ```
-
-A successful activation should show:
-
-```text
-(.venv)
-```
-
-at the beginning of the terminal prompt.
 
 ## 3. Install dependencies
 
@@ -323,35 +279,52 @@ python3 logistic_regression_analysis.py
 
 ---
 
-## Expected Output
+## Requirements
 
-When the script runs successfully, the terminal should display:
-
-- Feature names
-- Dataset dimensions
-- Missing-value counts
-- Class counts
-- Train/validation/test partition sizes
-- Partition overlap checks
-- NumPy training loss
-- NumPy coefficients
-- Scikit-learn coefficients
-- Validation probability comparison
-- Selected classification threshold
-- Validation metrics
-- Test metrics
-
-The following files should also be created or updated:
+The project directly uses:
 
 ```text
-reports/threshold_results.csv
-reports/assignment_results.csv
-reports/training_loss.png
+numpy
+pandas
+matplotlib
+scikit-learn
 ```
 
-### Successful Partition Check
+These packages are installed automatically from `requirements.txt`.
 
-The output should show:
+---
+
+## Tested Environment
+
+The project was developed and tested with:
+
+- Python 3.14
+- NumPy 2.5.4
+- pandas 3.1.0
+- Matplotlib 3.11.2
+- scikit-learn 1.9.1
+
+Approximate runtime on the tested machine is under one minute.
+
+Small numerical differences may occur with different supported Python or package versions.
+
+---
+
+## Expected Output
+
+A successful run prints:
+
+- Feature names and dataset dimensions
+- Missing-value and class counts
+- Training, validation, and test sizes
+- Partition overlap checks
+- NumPy training loss
+- Learned coefficients
+- NumPy vs. scikit-learn comparison
+- Selected classification threshold
+- Validation and test metrics
+
+A successful partition check should include:
 
 ```text
 Train / Validation: 0
@@ -360,20 +333,24 @@ Validation / Test: 0
 All rows covered: True
 ```
 
-### Approximate Training Output
-
-You should see values close to:
+Training output should be close to:
 
 ```text
 Initial training loss: 0.693147
 Final training loss: 0.246834
 ```
 
-The NumPy and scikit-learn coefficients should also be nearly identical.
+The script creates or updates:
+
+```text
+reports/threshold_results.csv
+reports/assignment_results.csv
+reports/training_loss.png
+```
 
 ---
 
-## How to View the Results
+## Viewing the Results
 
 Open:
 
@@ -381,7 +358,7 @@ Open:
 reports/threshold_results.csv
 ```
 
-to review the seven candidate thresholds and validation metrics.
+to review validation performance across the seven candidate thresholds.
 
 Open:
 
@@ -389,7 +366,7 @@ Open:
 reports/assignment_results.csv
 ```
 
-to review validation and test performance.
+to review the final validation and test metrics.
 
 Open:
 
@@ -397,13 +374,15 @@ Open:
 reports/training_loss.png
 ```
 
-to view the training-loss curve.
+to view the NumPy training-loss curve.
 
-The written interpretation is available in:
+See:
 
 ```text
 memo.md
 ```
+
+for the complete written interpretation and research-process discussion.
 
 ---
 
@@ -411,31 +390,23 @@ memo.md
 
 ### `python` is not recognized
 
-Verify whether Python is available using:
+Try:
 
 ```text
 python --version
 ```
 
-On macOS, try:
+On macOS:
 
 ```text
 python3 --version
 ```
 
-If neither command works, install Python and reopen the terminal.
+If Python is not found, install it and reopen the terminal.
 
----
+### `ModuleNotFoundError`
 
-### Missing Python module
-
-For an error such as:
-
-```text
-ModuleNotFoundError
-```
-
-make sure the virtual environment is active, then run:
+Make sure the virtual environment is active and reinstall dependencies:
 
 ```text
 python -m pip install -r requirements.txt
@@ -447,9 +418,7 @@ On macOS:
 python3 -m pip install -r requirements.txt
 ```
 
----
-
-### PowerShell will not activate `.venv`
+### PowerShell blocks virtual-environment activation
 
 Run:
 
@@ -463,15 +432,11 @@ Then:
 .\.venv\Scripts\Activate.ps1
 ```
 
-This does not permanently modify the system execution policy.
-
----
+This changes the execution policy only for the current PowerShell session.
 
 ### Script cannot be found
 
-Make sure the terminal is inside the project root.
-
-You should be inside:
+Make sure the terminal is inside:
 
 ```text
 breast-mass-risk-classification
@@ -483,13 +448,9 @@ Then run:
 python logistic_regression_analysis.py
 ```
 
----
-
 ### Output files are missing
 
-Confirm that the script completed without errors.
-
-The script automatically creates the `reports` directory if necessary and writes the required outputs there.
+Make sure the script completed without errors. The script creates the `reports` folder and writes the required files automatically.
 
 ---
 
@@ -497,21 +458,21 @@ The script automatically creates the `reports` directory if necessary and writes
 
 This model is not appropriate for clinical use.
 
-Important limitations include:
+Key limitations include:
 
 - Only two predictors are used
 - The dataset is relatively small
-- The data may not represent all patient populations
+- The dataset may not represent all populations
 - Probability calibration has not been independently verified
 - No external validation dataset was used
-- False negatives may have serious consequences in a real medical setting
+- False negatives could have serious consequences in a real clinical setting
 
-The project is intended to demonstrate logistic regression, gradient descent, classification thresholds, and reproducible machine-learning workflow.
+The project is intended to demonstrate logistic regression, gradient descent, classification thresholds, and reproducible machine-learning practices.
 
 ---
 
 ## Reproducibility
 
-The project is designed so that another user can clone the repository, create a clean Python environment, install dependencies, run the analysis, and reproduce the required result files without needing access to the original development environment.
+The project is designed so another user can clone the repository, create a clean Python environment, install the required dependencies, run the analysis, and reproduce the output files using only the instructions in this README.
 
-Independent peer replication is used to verify that these instructions are complete and reproducible.
+Independent peer replication is used to verify the reproducibility of the project.
